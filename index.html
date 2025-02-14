@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to PDF Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .upload-section {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .thumbnail-list {
+            margin: 20px 0;
+        }
+
+        .thumbnail-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+        }
+
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-right: 15px;
+        }
+
+        .move-buttons {
+            display: flex;
+            flex-direction: column;
+            margin-left: auto;
+        }
+
+        .move-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #fileName {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image to PDF Converter</h1>
+        
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <p>Click to upload images (PNG, JPG, JPEG)</p>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+        </div>
+
+        <div class="thumbnail-list" id="thumbnailList"></div>
+
+        <div class="controls">
+            <input type="text" id="fileName" placeholder="Enter PDF file name" value="converted.pdf">
+            <button onclick="convertToPdf()">Convert to PDF</button>
+        </div>
+    </div>
+
+    <p class="copyright">copyright Md Robiul Hossain | 2025</p>
+
+    <script>
+        let images = [];
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    images.push({
+                        src: e.target.result,
+                        file: file
+                    });
+                    updateThumbnails();
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function updateThumbnails() {
+            const thumbnailList = document.getElementById('thumbnailList');
+            thumbnailList.innerHTML = '';
+
+            images.forEach((image, index) => {
+                const item = document.createElement('div');
+                item.className = 'thumbnail-item';
+                
+                item.innerHTML = `
+                    <img class="thumbnail" src="${image.src}">
+                    <div class="move-buttons">
+                        <button class="move-btn" onclick="moveImage(${index}, -1)">↑</button>
+                        <button class="move-btn" onclick="moveImage(${index}, 1)">↓</button>
+                    </div>
+                `;
+                
+                thumbnailList.appendChild(item);
+            });
+        }
+
+        function moveImage(index, direction) {
+            if ((direction === -1 && index === 0) || 
+                (direction === 1 && index === images.length - 1)) return;
+                
+            [images[index], images[index + direction]] = 
+            [images[index + direction], images[index]];
+            
+            updateThumbnails();
+        }
+
+        async function convertToPdf() {
+            if (images.length === 0) {
+                alert('Please upload images first!');
+                return;
+            }
+
+            const pdf = new jspdf.jsPDF();
+            const fileName = document.getElementById('fileName').value || 'converted.pdf';
+
+            for (let i = 0; i < images.length; i++) {
+                if (i > 0) pdf.addPage();
+                
+                const img = new Image();
+                img.src = images[i].src;
+                
+                await new Promise(resolve => {
+                    img.onload = () => {
+                        const imgWidth = img.naturalWidth;
+                        const imgHeight = img.naturalHeight;
+                        
+                        const pageWidth = pdf.internal.pageSize.getWidth();
+                        const pageHeight = pdf.internal.pageSize.getHeight();
+                        
+                        const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+                        const finalWidth = imgWidth * ratio;
+                        const finalHeight = imgHeight * ratio;
+                        
+                        pdf.addImage(img, 'JPEG', 
+                            (pageWidth - finalWidth) / 2, 
+                            (pageHeight - finalHeight) / 2,
+                            finalWidth,
+                            finalHeight
+                        );
+                        resolve();
+                    };
+                });
+            }
+
+            pdf.save(fileName);
+        }
+    </script>
+</body>
+</html>
