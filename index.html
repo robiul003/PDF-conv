@@ -226,6 +226,8 @@
         <div class="crop-container">
             <img id="cropImage" src="" alt="Crop Image" style="max-width: 100%; max-height: 70vh;">
             <div class="crop-buttons">
+                <button onclick="rotateLeft()">Rotate Left</button>
+                <button onclick="rotateRight()">Rotate Right</button>
                 <button onclick="cancelCrop()">Cancel</button>
                 <button onclick="applyCrop()">Apply</button>
             </div>
@@ -270,7 +272,7 @@
             const img = new Image();
             img.src = imageSrc;
             img.onload = () => {
-                applyMagicFilter(img).then(filteredSrc => {
+                applyCamScannerFilter(img).then(filteredSrc => {
                     images.push({
                         src: filteredSrc,
                         file: file
@@ -297,7 +299,7 @@
                 const img = new Image();
                 img.src = imageSrc;
                 img.onload = () => {
-                    applyMagicFilter(img).then(filteredSrc => {
+                    applyCamScannerFilter(img).then(filteredSrc => {
                         images.push({
                             src: filteredSrc,
                             file: file
@@ -316,7 +318,7 @@
             });
         }
 
-        function applyMagicFilter(img) {
+        function applyCamScannerFilter(img) {
             return new Promise((resolve) => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -324,10 +326,10 @@
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Use CamanJS to apply filters
+                // Use CamanJS to apply CamScanner-like filter
                 Caman(canvas, function () {
                     this.brightness(10) // Increase brightness
-                        .contrast(10)   // Increase contrast
+                        .contrast(20)   // Increase contrast
                         .greyscale()    // Convert to grayscale
                         .render(() => {
                             resolve(this.toBase64());
@@ -372,6 +374,18 @@
                 viewMode: 1,
                 autoCropArea: 1,
             });
+        }
+
+        function rotateLeft() {
+            if (cropper) {
+                cropper.rotate(-90); // Rotate left by 90 degrees
+            }
+        }
+
+        function rotateRight() {
+            if (cropper) {
+                cropper.rotate(90); // Rotate right by 90 degrees
+            }
         }
 
         function cancelCrop() {
