@@ -6,6 +6,7 @@
     <title>Simple PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/camanjs/4.1.2/caman.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -192,15 +193,42 @@
                 
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    images.push({
-                        src: e.target.result,
-                        file: file
-                    });
-                    updateThumbnails();
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        // Apply Magic Editor-like filter
+                        applyMagicFilter(img).then(filteredSrc => {
+                            images.push({
+                                src: filteredSrc,
+                                file: file
+                            });
+                            updateThumbnails();
+                        });
+                    };
                 };
                 reader.readAsDataURL(file);
             });
         });
+
+        function applyMagicFilter(img) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // Use CamanJS to apply filters
+                Caman(canvas, function () {
+                    this.brightness(10) // Increase brightness
+                        .contrast(10)   // Increase contrast
+                        .greyscale()    // Convert to grayscale
+                        .render(() => {
+                            resolve(this.toBase64());
+                        });
+                });
+            });
+        }
 
         function updateThumbnails() {
             const thumbnailList = document.getElementById('thumbnailList');
