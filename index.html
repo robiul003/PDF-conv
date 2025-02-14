@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -13,21 +14,22 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
-                        url('Remove background project-2.png') center/cover fixed;
+                        url('assets/Remove background project-2.png') center/cover fixed;
             backdrop-filter: blur(5px);
             position: relative;
+            padding-top: 60px; /* Added padding to move body down */
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s ease-in;
         }
 
@@ -36,13 +38,23 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700; /* Only bold for title */
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
         .upload-section {
             border: 2px dashed #ccc;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
             margin: 20px 0;
             cursor: pointer;
             transition: all 0.3s ease;
+            border-radius: 10px;
         }
 
         .upload-section:hover {
@@ -61,6 +73,7 @@
 
         .move-btn, button {
             transition: all 0.2s ease;
+            border-radius: 25px; /* Rounded edges for buttons */
         }
 
         .move-btn:hover, button:hover {
@@ -76,6 +89,7 @@
             text-align: center;
             color: #666;
             font-size: 0.9em;
+            font-family: 'Poppins', sans-serif;
         }
 
         .remove-btn {
@@ -89,11 +103,41 @@
             color: #cc0000;
             transform: scale(1.2);
         }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #fileName {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            flex-grow: 1;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        button {
+            padding: 10px 25px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #1e88e5;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 20px;">Simple PDF</h1>
+        <h1>Simple PDF</h1>
         
         <div class="upload-section" onclick="document.getElementById('fileInput').click()">
             <p>Click to upload images (PNG, JPG, JPEG)</p>
@@ -104,7 +148,7 @@
 
         <div class="controls">
             <input type="text" id="fileName" placeholder="Enter PDF file name" value="converted.pdf">
-            <button onclick="convertToPdf()" style="background-color: #2196F3;">Convert to PDF</button>
+            <button onclick="convertToPdf()">Convert to PDF</button>
         </div>
     </div>
 
@@ -139,12 +183,12 @@
                 item.className = 'thumbnail-item';
                 
                 item.innerHTML = `
-                    <div style="display: flex; align-items: center; padding: 10px; margin: 10px 0; background: rgba(255,255,255,0.9); border-radius: 8px;">
+                    <div style="display: flex; align-items: center; padding: 10px; margin: 10px 0; background: rgba(255,255,255,0.9); border-radius: 10px;">
                         <img class="thumbnail" src="${image.src}" style="width: 80px; height: 80px; object-fit: contain; margin-right: 15px;">
                         <span class="remove-btn" onclick="removeImage(${index})">✕</span>
                         <div class="move-buttons" style="margin-left: auto;">
-                            <button class="move-btn" onclick="moveImage(${index}, -1)" style="margin: 0 5px;">↑</button>
-                            <button class="move-btn" onclick="moveImage(${index}, 1)" style="margin: 0 5px;">↓</button>
+                            <button class="move-btn" onclick="moveImage(${index}, -1)" style="margin: 0 5px; padding: 5px 10px; background: #4CAF50;">↑</button>
+                            <button class="move-btn" onclick="moveImage(${index}, 1)" style="margin: 0 5px; padding: 5px 10px; background: #4CAF50;">↓</button>
                         </div>
                     </div>
                 `;
