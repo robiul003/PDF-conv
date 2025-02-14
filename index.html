@@ -7,6 +7,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/camanjs/4.1.2/caman.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.3/heic2any.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -204,8 +207,8 @@
         <h1>Simple PDF</h1>
         
         <div class="upload-section" onclick="document.getElementById('fileInput').click()">
-            <p>Click to upload images (PNG, JPG, JPEG)</p>
-            <input type="file" id="fileInput" accept="image/*" multiple>
+            <p>Click to upload images (PNG, JPG, JPEG, HEIC, HEIF, PDF)</p>
+            <input type="file" id="fileInput" accept="image/*, .heic, .heif, .pdf" multiple>
         </div>
 
         <div class="thumbnail-list" id="thumbnailList"></div>
@@ -241,29 +244,77 @@
         let currentCropIndex = null;
         let cropper = null;
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
-            files.forEach(file => {
-                if (!file.type.startsWith('image/')) return;
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        // Apply Magic Editor-like filter
-                        applyMagicFilter(img).then(filteredSrc => {
-                            images.push({
-                                src: filteredSrc,
-                                file: file
-                            });
-                            updateThumbnails();
+            for (const file of files) {
+                if (file.type.startsWith('image/') || file.name.endsWith('.heic') || file.name.endsWith('.heif')) {
+                    await handleImageFile(file);
+                } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                    await handlePdfFile(file);
+                }
+            }
+            updateThumbnails();
+        });
+
+        async function handleImageFile(file) {
+            let imageSrc;
+            if (file.name.endsWith('.heic') || file.name.endsWith('.heif')) {
+                // Convert HEIC/HEIF to JPEG
+                const blob = await heic2any({ blob: file, toType: 'image/jpeg' });
+                imageSrc = URL.createObjectURL(blob);
+            } else {
+                // Regular image file
+                imageSrc = await readFileAsDataURL(file);
+            }
+
+            const img = new Image();
+            img.src = imageSrc;
+            img.onload = () => {
+                applyMagicFilter(img).then(filteredSrc => {
+                    images.push({
+                        src: filteredSrc,
+                        file: file
+                    });
+                    updateThumbnails();
+                });
+            };
+        }
+
+        async function handlePdfFile(file) {
+            const pdfData = await file.arrayBuffer();
+            const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                const imageSrc = canvas.toDataURL('image/jpeg', 0.8);
+
+                const img = new Image();
+                img.src = imageSrc;
+                img.onload = () => {
+                    applyMagicFilter(img).then(filteredSrc => {
+                        images.push({
+                            src: filteredSrc,
+                            file: file
                         });
-                    };
+                        updateThumbnails();
+                    });
                 };
+            }
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
                 reader.readAsDataURL(file);
             });
-        });
+        }
 
         function applyMagicFilter(img) {
             return new Promise((resolve) => {
