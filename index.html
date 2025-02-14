@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/camanjs/4.1.2/caman.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -139,6 +141,44 @@
             transform: scale(1.2);
         }
 
+        .note {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .crop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .crop-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .crop-buttons {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .crop-buttons button {
+            margin: 0 5px;
+        }
+
         @media (min-width: 768px) {
             .controls {
                 flex-direction: row;
@@ -174,6 +214,19 @@
             <input type="text" id="fileName" placeholder="Enter PDF file name" value="converted.pdf">
             <button onclick="convertToPdf()">Convert to PDF</button>
         </div>
+
+        <p class="note">Note: This converter applies the CamScanner Magic Editor-like filter.</p>
+    </div>
+
+    <!-- Crop Modal -->
+    <div class="crop-modal" id="cropModal">
+        <div class="crop-container">
+            <img id="cropImage" src="" alt="Crop Image" style="max-width: 100%; max-height: 70vh;">
+            <div class="crop-buttons">
+                <button onclick="cancelCrop()">Cancel</button>
+                <button onclick="applyCrop()">Apply</button>
+            </div>
+        </div>
     </div>
 
     <p class="copyright">copyright Md Robiul Hossain | 2025</p>
@@ -185,6 +238,8 @@
         });
 
         let images = [];
+        let currentCropIndex = null;
+        let cropper = null;
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
@@ -242,6 +297,7 @@
                     <div style="display: flex; align-items: center; padding: 10px; margin: 10px 0; background: rgba(255,255,255,0.9); border-radius: 10px;">
                         <img class="thumbnail" src="${image.src}" style="width: 80px; height: 80px; object-fit: contain; margin-right: 15px;">
                         <span class="remove-btn" onclick="removeImage(${index})">✕</span>
+                        <button onclick="openCropModal(${index})" style="margin: 0 5px; padding: 5px 10px; background: #4CAF50;">Crop</button>
                         <div class="move-buttons" style="margin-left: auto;">
                             <button class="move-btn" onclick="moveImage(${index}, -1)" style="margin: 0 5px; padding: 5px 10px; background: #4CAF50;">↑</button>
                             <button class="move-btn" onclick="moveImage(${index}, 1)" style="margin: 0 5px; padding: 5px 10px; background: #4CAF50;">↓</button>
@@ -251,6 +307,37 @@
                 
                 thumbnailList.appendChild(item);
             });
+        }
+
+        function openCropModal(index) {
+            currentCropIndex = index;
+            const cropImage = document.getElementById('cropImage');
+            cropImage.src = images[index].src;
+            document.getElementById('cropModal').style.display = 'flex';
+
+            // Initialize Cropper.js
+            cropper = new Cropper(cropImage, {
+                aspectRatio: NaN, // Free aspect ratio
+                viewMode: 1,
+                autoCropArea: 1,
+            });
+        }
+
+        function cancelCrop() {
+            document.getElementById('cropModal').style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
+        function applyCrop() {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas();
+                images[currentCropIndex].src = canvas.toDataURL();
+                updateThumbnails();
+                cancelCrop();
+            }
         }
 
         function removeImage(index) {
