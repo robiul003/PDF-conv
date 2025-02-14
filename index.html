@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image to PDF Converter</title>
+    <title>Simple PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
@@ -13,100 +13,87 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+                        url('Remove background project-2.png') center/cover fixed;
+            backdrop-filter: blur(5px);
+            position: relative;
         }
 
         .container {
-            background-color: #f5f5f5;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .upload-section {
             border: 2px dashed #ccc;
             padding: 30px;
             text-align: center;
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .thumbnail-list {
             margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
         }
 
         .thumbnail-item {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: white;
-            border-radius: 4px;
+            animation: slideUp 0.3s ease;
         }
 
-        .thumbnail {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            margin-right: 15px;
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .move-buttons {
-            display: flex;
-            flex-direction: column;
-            margin-left: auto;
+        .move-btn, button {
+            transition: all 0.2s ease;
         }
 
-        .move-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        #fileName {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            flex-grow: 1;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
+        .move-btn:hover, button:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
         }
 
         .copyright {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             text-align: center;
-            margin-top: 30px;
             color: #666;
+            font-size: 0.9em;
+        }
+
+        .remove-btn {
+            color: #ff4444;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            color: #cc0000;
+            transform: scale(1.2);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Image to PDF Converter</h1>
+        <h1 style="text-align: center; margin-bottom: 20px;">Simple PDF</h1>
         
         <div class="upload-section" onclick="document.getElementById('fileInput').click()">
             <p>Click to upload images (PNG, JPG, JPEG)</p>
@@ -117,7 +104,7 @@
 
         <div class="controls">
             <input type="text" id="fileName" placeholder="Enter PDF file name" value="converted.pdf">
-            <button onclick="convertToPdf()">Convert to PDF</button>
+            <button onclick="convertToPdf()" style="background-color: #2196F3;">Convert to PDF</button>
         </div>
     </div>
 
@@ -152,15 +139,23 @@
                 item.className = 'thumbnail-item';
                 
                 item.innerHTML = `
-                    <img class="thumbnail" src="${image.src}">
-                    <div class="move-buttons">
-                        <button class="move-btn" onclick="moveImage(${index}, -1)">↑</button>
-                        <button class="move-btn" onclick="moveImage(${index}, 1)">↓</button>
+                    <div style="display: flex; align-items: center; padding: 10px; margin: 10px 0; background: rgba(255,255,255,0.9); border-radius: 8px;">
+                        <img class="thumbnail" src="${image.src}" style="width: 80px; height: 80px; object-fit: contain; margin-right: 15px;">
+                        <span class="remove-btn" onclick="removeImage(${index})">✕</span>
+                        <div class="move-buttons" style="margin-left: auto;">
+                            <button class="move-btn" onclick="moveImage(${index}, -1)" style="margin: 0 5px;">↑</button>
+                            <button class="move-btn" onclick="moveImage(${index}, 1)" style="margin: 0 5px;">↓</button>
+                        </div>
                     </div>
                 `;
                 
                 thumbnailList.appendChild(item);
             });
+        }
+
+        function removeImage(index) {
+            images.splice(index, 1);
+            updateThumbnails();
         }
 
         function moveImage(index, direction) {
