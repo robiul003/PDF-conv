@@ -245,6 +245,7 @@
         let images = [];
         let currentCropIndex = null;
         let cropper = null;
+        let rotationAngle = 0; // Track rotation angle
 
         document.getElementById('fileInput').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
@@ -328,8 +329,8 @@
 
                 // Use CamanJS to apply CamScanner-like filter
                 Caman(canvas, function () {
-                    this.brightness(10) // Increase brightness
-                        .contrast(20)   // Increase contrast
+                    this.brightness(15) // Increase brightness
+                        .contrast(25)   // Increase contrast
                         .greyscale()    // Convert to grayscale
                         .render(() => {
                             resolve(this.toBase64());
@@ -378,13 +379,15 @@
 
         function rotateLeft() {
             if (cropper) {
-                cropper.rotate(-90); // Rotate left by 90 degrees
+                rotationAngle -= 90; // Rotate left by 90 degrees
+                cropper.rotate(-90);
             }
         }
 
         function rotateRight() {
             if (cropper) {
-                cropper.rotate(90); // Rotate right by 90 degrees
+                rotationAngle += 90; // Rotate right by 90 degrees
+                cropper.rotate(90);
             }
         }
 
@@ -394,15 +397,36 @@
                 cropper.destroy();
                 cropper = null;
             }
+            rotationAngle = 0; // Reset rotation angle
         }
 
         function applyCrop() {
             if (cropper) {
                 const canvas = cropper.getCroppedCanvas();
-                images[currentCropIndex].src = canvas.toDataURL();
+                const rotatedCanvas = rotateCanvas(canvas, rotationAngle); // Apply rotation
+                images[currentCropIndex].src = rotatedCanvas.toDataURL();
                 updateThumbnails();
                 cancelCrop();
             }
+        }
+
+        function rotateCanvas(canvas, angle) {
+            const rotatedCanvas = document.createElement('canvas');
+            const ctx = rotatedCanvas.getContext('2d');
+
+            if (angle % 180 === 90) {
+                rotatedCanvas.width = canvas.height;
+                rotatedCanvas.height = canvas.width;
+            } else {
+                rotatedCanvas.width = canvas.width;
+                rotatedCanvas.height = canvas.height;
+            }
+
+            ctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+            ctx.rotate((angle * Math.PI) / 180);
+            ctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+
+            return rotatedCanvas;
         }
 
         function removeImage(index) {
