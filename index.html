@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -16,11 +17,20 @@
         body {
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
+            position: relative;
+            padding-top: 60px; /* Added padding to move body down */
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Ensure it stays behind the content */
             background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
                         url('assets/Remove background project-2.png') center/cover fixed;
             backdrop-filter: blur(5px);
-            position: relative;
-            padding-top: 60px; /* Added padding to move body down */
         }
 
         .container {
@@ -31,6 +41,8 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s ease-in;
+            position: relative;
+            z-index: 1; /* Ensure it stays above the particles */
         }
 
         @keyframes fadeIn {
@@ -90,6 +102,7 @@
             color: #666;
             font-size: 0.9em;
             font-family: 'Poppins', sans-serif;
+            z-index: 1; /* Ensure it stays above the particles */
         }
 
         .remove-btn {
@@ -136,6 +149,10 @@
     </style>
 </head>
 <body>
+    <!-- Particles.js Container -->
+    <div id="particles-js"></div>
+
+    <!-- Main Content -->
     <div class="container">
         <h1>Simple PDF</h1>
         
@@ -155,6 +172,11 @@
     <p class="copyright">copyright Md Robiul Hossain | 2025</p>
 
     <script>
+        // Initialize Particles.js
+        particlesJS.load('particles-js', 'particles.json', function() {
+            console.log('Particles.js loaded!');
+        });
+
         let images = [];
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
